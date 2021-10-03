@@ -1,0 +1,4 @@
+# Created by .ignore support plugin (hsz.mobi)
+get-weather/src/test/
+get-weather/target/generated-sources/
+get-weather/target/generated-test-sources/
