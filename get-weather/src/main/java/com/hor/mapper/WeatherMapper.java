@@ -10,8 +10,6 @@ public interface WeatherMapper {
 
     void insertWeather(OneDay oneDay);
 
-    //void updateById(ParamDTO param);
-
     Integer queryIfCityNameExist(String cityName);
 
     Integer queryIfExistSameRow(OneDay oneDay);
