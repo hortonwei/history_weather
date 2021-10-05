@@ -7,7 +7,7 @@
     <!--插入前非空判断，否则什么都不做-->
     <insert id="insertWeather" parameterType="com.hor.bean.OneDay">
         <choose>
-            <when test="date != null and weatherAbbr != null and windPower != null and aqi != 0">
+            <when test="date != null and weatherAbbr != null and windPower != null">
                 insert into
                 weather(city_name, date, max_temp, min_temp, weather_abbr, wind_power, aqi, fcd)
                 values (#{cityName}, #{date,jdbcType=DATE}, #{maxTemp}, #{minTemp}, #{weatherAbbr}, #{windPower}, #{aqi}, now())

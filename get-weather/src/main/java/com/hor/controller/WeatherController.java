@@ -134,12 +134,10 @@ public class WeatherController {
         //map.put("fuzhou", "58847");
         //map.put("xiamen", "59134");
         //map.put("harbin", "50953");
-        //map.put("liupanshui", "56693");
         //map.put("zhuhai", "59488");
         //map.put("nanning", "59431");
         map.put("guiyang", "57816");
-        map.put("yaan", "56287");
-        String yearNo = "2020";
+        String yearNo = "2019";
         map.forEach((cityName, areaId) -> {
             try {
                 insert2(yearNo, cityName, areaId);
@@ -247,7 +245,13 @@ public class WeatherController {
                     if (row == 6) {
                         Matcher matcher = patternNum.matcher(stringBuilder.toString());
                         String trim = matcher.replaceAll("").trim();
-                        oneDay.setAqi(Integer.parseInt(trim));
+                        try {
+                            int parseInt = Integer.parseInt(trim);
+                            oneDay.setAqi(parseInt);
+                        } catch (NumberFormatException e) {
+                            System.out.println("aqi为空");
+                            oneDay.setAqi(0);
+                        }
                     }
                     row++;
                     res.delete(0, res.length());
@@ -255,7 +259,7 @@ public class WeatherController {
                 }
                 Integer ifExistSameRow = queryIfExistSameRow(oneDay);
                 if (ifExistSameRow > 0) {
-                    System.out.println("存在重复数据---");
+                    System.out.println("存在重复数据---" + oneDay.getCityName() + oneDay.getDate());
                 }else {
                     System.out.println(oneDay);
                     getWeatherService.getWeatherInsert(oneDay);
