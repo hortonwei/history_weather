@@ -21,6 +21,6 @@ public class OneDay implements Serializable {
      private int minTemp;
      private String weatherAbbr;
      private String windPower;
-
+     private int aqi;
 
 }
