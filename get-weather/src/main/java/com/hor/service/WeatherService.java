@@ -1,20 +1,24 @@
 package com.hor.service;
 
 import com.hor.bean.OneDay;
+import com.hor.bean.OneMonthJson;
 import com.hor.mapper.WeatherMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,8 +28,10 @@ public class WeatherService {
 
     @Autowired
     private WeatherMapper weatherMapper;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
-    private String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36";
+    private final String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36";
     private DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public void getWeatherInsert(OneDay oneDay) {
@@ -41,23 +47,33 @@ public class WeatherService {
     public void insert3(String nameEN, String nameCN, String yearNo) throws InterruptedException {
         StringBuffer url = new StringBuffer();
         for (int monthNo = 1; monthNo <= 12; monthNo++) {
-            if (monthNo == 2) {
-                break;
-            }
-            Thread.sleep(1000);
+            Thread.sleep(2000);
             url.setLength(0);
             url.append("https://tianqiapi.com/api?version=history&appid=61273811&appsecret=G3vsSZqC&city=")
                     .append(nameCN).append("&year=").append(yearNo).append("&month=");
             url.append(monthNo);
-            Document doc = null;
+            Document doc;
             try {
-                //document = Jsoup.connect(String.valueOf(url)).ignoreContentType(true).userAgent(userAgent).get();
-                doc = Jsoup.parse(new URL(url.toString()).openStream(), "GBK", String.valueOf(url));
+                doc = Jsoup.connect(String.valueOf(url)).ignoreContentType(true).userAgent(userAgent).get();
+                //doc = Jsoup.parse(new URL(url.toString()).openStream(), "GBK", String.valueOf(url));
             } catch (IOException e) {
                 e.printStackTrace();
                 break;
             }
-            System.out.println(convertUnicode(doc.text()));
+            String s = convertUnicode(doc.text());
+            if (s.contains("\"errcode\":100")) {
+                System.out.println("请求失败，退出循环");
+                break;
+            }
+            Query query = new Query(Criteria.where("city").is(nameCN).and("date").is(yearNo + monthNo));
+            query.limit(1);
+            List<OneMonthJson> all = mongoTemplate.find(query, OneMonthJson.class, yearNo);
+            if (all.size() == 0) {
+                System.out.println(s);
+                mongoTemplate.insert(s, yearNo);
+            } else {
+                System.out.println("跳过重复数据");
+            }
         }
     }
 
