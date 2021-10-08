@@ -33,6 +33,8 @@ public class WeatherService {
 
     private final String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36";
     private DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+    private final String appid = "24287291";
+    private final String appsecret = "7kIjgkkq";
 
     public void getWeatherInsert(OneDay oneDay) {
         weatherMapper.insertWeather(oneDay);
@@ -42,39 +44,40 @@ public class WeatherService {
         return weatherMapper.queryIfExistSameRow(oneDay);
     }
 
-    //使用API接口
-    //https://tianqiapi.com/api?version=history&appid=61273811&appsecret=G3vsSZqC&city=雅安&year=2019&month=12
-    public void insert3(String nameEN, String nameCN, String yearNo) throws InterruptedException {
+    //使用API接口（每个邮箱注册试用200次请求）
+    //https://tianqiapi.com/api?version=history&appid=61273811&appsecret=G3vsSZqC&city=北京&year=2020&month=1
+    public boolean insert3(String nameEN, String nameCN, String yearNo) throws InterruptedException {
         StringBuffer url = new StringBuffer();
+        Document doc;
         for (int monthNo = 1; monthNo <= 12; monthNo++) {
-            Thread.sleep(2000);
+            Thread.sleep(500);
             url.setLength(0);
-            url.append("https://tianqiapi.com/api?version=history&appid=61273811&appsecret=G3vsSZqC&city=")
-                    .append(nameCN).append("&year=").append(yearNo).append("&month=");
+            url.append("https://tianqiapi.com/api?version=history&appid=").append(appid).append("&appsecret=").append(appsecret)
+                    .append("&city=").append(nameCN).append("&year=").append(yearNo).append("&month=");
             url.append(monthNo);
-            Document doc;
-            try {
-                doc = Jsoup.connect(String.valueOf(url)).ignoreContentType(true).userAgent(userAgent).get();
-                //doc = Jsoup.parse(new URL(url.toString()).openStream(), "GBK", String.valueOf(url));
-            } catch (IOException e) {
-                e.printStackTrace();
-                break;
-            }
-            String s = convertUnicode(doc.text());
-            if (s.contains("\"errcode\":100")) {
-                System.out.println("请求失败，退出循环");
-                break;
-            }
             Query query = new Query(Criteria.where("city").is(nameCN).and("date").is(yearNo + monthNo));
             query.limit(1);
             List<OneMonthJson> all = mongoTemplate.find(query, OneMonthJson.class, yearNo);
             if (all.size() == 0) {
+                try {
+                    doc = Jsoup.connect(String.valueOf(url)).ignoreContentType(true).userAgent(userAgent).get();
+                    //doc = Jsoup.parse(new URL(url.toString()).openStream(), "GBK", String.valueOf(url));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return true;
+                }
+                String s = convertUnicode(doc.text());
+                if (s.contains("\"errcode\":100")) {
+                    System.out.println("响应错误码，退出循环");
+                    return true;
+                }
                 System.out.println(s);
                 mongoTemplate.insert(s, yearNo);
             } else {
                 System.out.println("跳过重复数据");
             }
         }
+        return false;
     }
 
     public static String convertUnicode(String ori){
