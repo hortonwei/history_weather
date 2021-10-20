@@ -33,8 +33,9 @@ public class WeatherService {
 
     private final String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36";
     private DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-    private final String appid = "24287291";
-    private final String appsecret = "7kIjgkkq";
+    private final String appid = "43319553";
+    private final String appsecret = "3sf2j8e7";
+    private final String mongoDocSuffix = "data";
 
     public void getWeatherInsert(OneDay oneDay) {
         weatherMapper.insertWeather(oneDay);
@@ -47,17 +48,21 @@ public class WeatherService {
     //使用API接口（每个邮箱注册试用200次请求）
     //https://tianqiapi.com/api?version=history&appid=61273811&appsecret=G3vsSZqC&city=北京&year=2020&month=1
     public boolean insert3(String nameEN, String nameCN, String yearNo) throws InterruptedException {
+        String collectionName = mongoDocSuffix + yearNo;
         StringBuffer url = new StringBuffer();
         Document doc;
         for (int monthNo = 1; monthNo <= 12; monthNo++) {
-            Thread.sleep(500);
+            //if (monthNo == 2) {
+            //    break;
+            //}
+            Thread.sleep(100);
             url.setLength(0);
             url.append("https://tianqiapi.com/api?version=history&appid=").append(appid).append("&appsecret=").append(appsecret)
                     .append("&city=").append(nameCN).append("&year=").append(yearNo).append("&month=");
             url.append(monthNo);
             Query query = new Query(Criteria.where("city").is(nameCN).and("date").is(yearNo + monthNo));
             query.limit(1);
-            List<OneMonthJson> all = mongoTemplate.find(query, OneMonthJson.class, yearNo);
+            List<OneMonthJson> all = mongoTemplate.find(query, OneMonthJson.class, collectionName);
             if (all.size() == 0) {
                 try {
                     doc = Jsoup.connect(String.valueOf(url)).ignoreContentType(true).userAgent(userAgent).get();
@@ -72,9 +77,7 @@ public class WeatherService {
                     return true;
                 }
                 System.out.println(s);
-                mongoTemplate.insert(s, yearNo);
-            } else {
-                System.out.println("跳过重复数据");
+                mongoTemplate.getCollection(collectionName).insertOne(org.bson.Document.parse(s));
             }
         }
         return false;

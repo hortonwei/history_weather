@@ -16,7 +16,7 @@ public class WeatherController {
     @Autowired
     private WeatherService getWeatherService;
 
-    private final String yearNo = "2020";
+    private final String yearNo = "2019";
 
     // 各城市一年的数据
     @GetMapping("/insert_batch")
@@ -66,33 +66,36 @@ public class WeatherController {
     @GetMapping("/insert_batch3")
     public void insert_batch3() {
         HashMap<String, String> cityNameMap = new HashMap<>(); //nameEN nameCN
-        //cityNameMap.put("beijing", "北京");
+        cityNameMap.put("beijing", "北京");
         cityNameMap.put("shanghai", "上海");
-        //cityNameMap.put("guangzhou", "广州");
+        cityNameMap.put("guangzhou", "广州");
         cityNameMap.put("shenzhen", "深圳");
-        //cityNameMap.put("chengdu", "成都");
+        cityNameMap.put("chengdu", "成都");
         cityNameMap.put("hangzhou", "杭州");
         cityNameMap.put("chongqing", "重庆");
         cityNameMap.put("wuhan", "武汉");
-        //cityNameMap.put("xian", "西安");
+        cityNameMap.put("xian", "西安");
         cityNameMap.put("suzhou", "苏州");
-        //cityNameMap.put("nanjing", "南京");
+        cityNameMap.put("nanjing", "南京");
         cityNameMap.put("changsha", "长沙");
-        //cityNameMap.put("qingdao", "青岛");
+        cityNameMap.put("qingdao", "青岛");
         cityNameMap.put("shenyang", "沈阳");
         cityNameMap.put("kunming", "昆明");
-        //cityNameMap.put("dalian", "大连");
+        cityNameMap.put("dalian", "大连");
         cityNameMap.put("fuzhou", "福州");
         cityNameMap.put("xiamen", "厦门");
-        //cityNameMap.put("harbin", "哈尔滨");
+        cityNameMap.put("harbin", "哈尔滨");
         cityNameMap.put("zhuhai", "珠海");
         cityNameMap.put("nanning", "南宁");
         cityNameMap.put("guiyang", "贵阳");
-        //cityNameMap.put("dongguan", "东莞");
-        //cityNameMap.put("foshan", "佛山");
+        cityNameMap.put("dongguan", "东莞");
+        cityNameMap.put("foshan", "佛山");
         cityNameMap.forEach((nameEN, nameCN) -> {
             try {
-                getWeatherService.insert3(nameEN, nameCN, yearNo);
+                boolean isFail = getWeatherService.insert3(nameEN, nameCN, yearNo);
+                if (isFail) {
+                    throw new InterruptedException();
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
